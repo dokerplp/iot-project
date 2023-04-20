@@ -57,7 +57,7 @@ export class MiBand5 {
           services: [ADVERTISEMENT_SERVICE],
         },
       ],
-      optionalServices: [UUIDS.miband2, UUIDS.heartrate, UUIDS.miband1, UUIDS.alert],
+      optionalServices: [UUIDS.miband2, UUIDS.heartrate, UUIDS.miband1, UUIDS.alert, UUIDS.notifications],
     });
 
     window.dispatchEvent(new CustomEvent("connected"));
@@ -69,6 +69,7 @@ export class MiBand5 {
     this.services.miband2 = await server.getPrimaryService(UUIDS.miband2);
     this.services.heartrate = await server.getPrimaryService(UUIDS.heartrate);
     this.services.vibration = await server.getPrimaryService(UUIDS.alert);
+    this.services.notification = await server.getPrimaryService(UUIDS.notifications);
 
     console.log("Services initialized");
 
@@ -80,7 +81,7 @@ export class MiBand5 {
     this.chars.battery = await this.services.miband1.getCharacteristic(CHAR_UUIDS.battery);
     this.chars.vibration = await this.services.vibration.getCharacteristic(CHAR_UUIDS.alert);
     this.chars.steps = await this.services.miband1.getCharacteristic(CHAR_UUIDS.steps);
-
+    this.chars.notification = await this.services.notification.getCharacteristic(CHAR_UUIDS.notifications);
 
     console.log("Characteristics initialized");
 
@@ -165,6 +166,12 @@ export class MiBand5 {
 
   async vibrate() {
     await this.chars.vibration.writeValue(Uint8Array.from([3]));
+  }
+
+  async notification(type, name) {
+    let bytes = (new TextEncoder()).encode(name)
+    let msg = concatBuffers(new Uint8Array(type), bytes)
+    await window.miband.chars.notification.writeValue(msg)
   }
 
   async startNotifications(char, cb) {

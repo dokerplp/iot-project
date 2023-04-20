@@ -46,10 +46,10 @@ export const CHAR_UUIDS = {
 export const NOTIFICATION_DESCRIPTOR = 0x2902;
 
 export const NOTIFICATION_TYPES = {
-  msg: '\x01\x01',
-  call: '\x03\x01',
-  missed: '\x04\x01',
-  sms: '\x05\x01',
+  msg: [0x1, 0x1],
+  call: [0x3, 0x1],
+  missed: [0x4, 0x1],
+  sms: [0x5, 0x1],
 }
 
 export const ADVERTISEMENT_SERVICE = 0xFEE0;
