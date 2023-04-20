@@ -13,7 +13,7 @@
 <div id="chart"></div>
 <div id="container">
   <div id="auth">
-    <div class="init">
+    <div class="init" >
       <div class="form-group">
         <label for="auth-key"
         >Auth key
@@ -54,14 +54,18 @@
       <span class="data-text" id="calories">0</span><span class="data-text unit"> CAL</span>
     </div>
     <div class="power">
-      <img class="img" src="img/battery.png" alt="hkj"/>
+      <img class="img" src="img/battery.png"/>
       <span class="data-text" id="power">0</span><span class="data-text unit"> %</span>
     </div>
+  </div>
+  <div id="actions" class="d-none">
+    <img class="img" src="img/flash-btn.png" onclick="window.miband.vibrate()"/>
   </div>
 </div>
 
 <script src="aes.js"></script>
 <script src="bundle.js"></script>
+
 <script>
   const hr = document.querySelector("#hr");
   const step = document.querySelector("#step");
@@ -74,22 +78,27 @@
 
   const initBox = document.querySelector(".init");
   const dataBox = document.querySelector("#data");
+  const actionsBox = document.querySelector('#actions');
 
   let authKey = localStorage.getItem("auth-key");
   if (authKey) keyInput.value = authKey;
 
   connectButton.addEventListener("click", async () => {
     authKey = keyInput.value;
+
     window.addEventListener("connected", (e) => {
       initBox.classList.add("d-none");
       dataBox.classList.remove("d-none");
+      actionsBox.classList.remove("d-none");
       localStorage.setItem("auth-key", authKey);
     });
+
     window.addEventListener("heartrate", (e) => {hr.innerText = e.detail;});
     window.addEventListener("steps", (e) => {step.innerText = e.detail;});
     window.addEventListener("distance", (e) => {distance.innerText = e.detail;});
     window.addEventListener("calories", (e) => {calories.innerText = e.detail;});
     window.addEventListener("power", (e) => {power.innerText = e.detail;});
+
     try {
       window.miband = new MiBand5(authKey);
       await window.miband.init();
