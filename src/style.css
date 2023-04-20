@@ -4,7 +4,7 @@ html {
   padding: 0;
   font-family: sans-serif;
   height: 100%;
-  background-color: #222;
+  background-color: #4d4d4d;
 }
 
 div.main {
@@ -27,7 +27,7 @@ button:hover {
   background: #eee;
 }
 
-#container {
+#auth {
   color: #eee;
   display: flex;
   justify-content: center;
@@ -39,7 +39,21 @@ button:hover {
   right: 0;
 }
 
-#container > div {
+#auth > div {}
+
+#data {
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  padding: 20px;
+}
+
+#data div {
+  margin-top: 20px;
+}
+
+.data-text {
+
 }
 
 #chart {
@@ -77,19 +91,25 @@ button:hover {
   margin: 8px 4px;
 }
 
-#heartrate {
-  font-size: 30vw;
+.data-text {
+  font-size: 4vw;
   color: #f1f1f1;
   margin: 0;
   text-align: center;
   font-weight: bold;
 }
 
-#heartrate .unit {
-  font-size: 5vw;
+.unit {
+  font-size: 2vw;
   color: #c1c1c1;
+}
+
+.img {
+  width: 100px;
+  height: 100px;
 }
 
 .d-none {
   display: none;
 }
+

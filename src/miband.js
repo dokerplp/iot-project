@@ -18,6 +18,14 @@ function bufReverse(buf) {
   return new Int8Array(buf).reverse();
 }
 
+function event(name, value) {
+  window.dispatchEvent(
+      new CustomEvent(name, {
+        detail: value,
+      })
+  );
+}
+
 const concatBuffers = (buffer1, buffer2) => {
   const out = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
   out.set(new Uint8Array(buffer1), 0);
@@ -115,28 +123,21 @@ export class MiBand5 {
   }
 
   async measureHr() {
+    console.log("Starting heart rate measurement")
     await this.chars.hrControl.writeValue(Uint8Array.from([21, 2, 1]));
     await this.startNotifications(this.chars.hrMeasure, (e) => {
-      console.log("Current heart rate: ", e.target.value);
-      const heartRate = e.target.value.getInt16();
-      window.dispatchEvent(
-        new CustomEvent("heartrate", {
-          detail: heartRate,
-        })
-      );
+      const heartrate = e.target.value.getInt16();
+      console.log("Current heart rate: ", heartrate);
+      event("heartrate", heartrate);
     });
-
-    setInterval(() => {
-      this.chars.hrControl.writeValue(Uint8Array.from([22]));
-    }, 1000);
   }
 
   async getBattery() {
-    return this.chars.battery.readValue()
+    this.chars.battery.readValue()
         .then(data => {
           let power = new Int8Array((data).buffer)[1]
           console.log("Current power: ", power)
-          return power
+          event("power", power);
         })
   }
 
@@ -151,9 +152,10 @@ export class MiBand5 {
           let steps = buf2dec(bufReverse(buffer.slice(1, 5)))
           let distance = buf2dec(bufReverse(buffer.slice(5, 9)))
           let calories = buf2dec(bufReverse(buffer.slice(9, 13)))
-          console.log("Current steps: ", steps)
-          console.log("Current distance: ", distance)
-          console.log("Current calories: ", calories)
+          console.log("Current steps: ", steps, ", current distance: ", distance, " current calories: ", calories)
+          event("steps", steps);
+          event("distance", distance);
+          event("calories", calories);
         })
   }
 
