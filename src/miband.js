@@ -6,6 +6,18 @@ function buf2hex(buffer) {
     .join("");
 }
 
+function hex2dec(hex) {
+  return parseInt(hex, 16);
+}
+
+function buf2dec(buf) {
+  return hex2dec(buf2hex(buf))
+}
+
+function bufReverse(buf) {
+  return new Int8Array(buf).reverse();
+}
+
 const concatBuffers = (buffer1, buffer2) => {
   const out = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
   out.set(new Uint8Array(buffer1), 0);
@@ -37,8 +49,9 @@ export class MiBand5 {
           services: [ADVERTISEMENT_SERVICE],
         },
       ],
-      optionalServices: [UUIDS.miband2, UUIDS.heartrate, UUIDS.miband1],
+      optionalServices: [UUIDS.miband2, UUIDS.heartrate, UUIDS.miband1, UUIDS.alert],
     });
+
     window.dispatchEvent(new CustomEvent("connected"));
     await device.gatt.disconnect();
     const server = await device.gatt.connect();
@@ -47,21 +60,22 @@ export class MiBand5 {
     this.services.miband1 = await server.getPrimaryService(UUIDS.miband1);
     this.services.miband2 = await server.getPrimaryService(UUIDS.miband2);
     this.services.heartrate = await server.getPrimaryService(UUIDS.heartrate);
+    this.services.vibration = await server.getPrimaryService(UUIDS.alert);
+
     console.log("Services initialized");
 
-    this.chars.auth = await this.services.miband2.getCharacteristic(
-      CHAR_UUIDS.auth
-    );
-    this.chars.hrControl = await this.services.heartrate.getCharacteristic(
-      CHAR_UUIDS.heartrate_control
-    );
-    this.chars.hrMeasure = await this.services.heartrate.getCharacteristic(
-      CHAR_UUIDS.heartrate_measure
-    );
-    this.chars.sensor = await this.services.miband1.getCharacteristic(
-      CHAR_UUIDS.sensor
-    );
+    this.chars.auth = await this.services.miband2.getCharacteristic(CHAR_UUIDS.auth);
+    this.chars.hrControl = await this.services.heartrate.getCharacteristic(CHAR_UUIDS.heartrate_control);
+    this.chars.hrMeasure = await this.services.heartrate.getCharacteristic(CHAR_UUIDS.heartrate_measure);
+    this.chars.sensor = await this.services.miband1.getCharacteristic(CHAR_UUIDS.sensor);
+
+    this.chars.battery = await this.services.miband1.getCharacteristic(CHAR_UUIDS.battery);
+    this.chars.vibration = await this.services.vibration.getCharacteristic(CHAR_UUIDS.alert);
+    this.chars.steps = await this.services.miband1.getCharacteristic(CHAR_UUIDS.steps);
+
+
     console.log("Characteristics initialized");
+
     await this.authenticate();
   }
 
@@ -94,15 +108,16 @@ export class MiBand5 {
   async onAuthenticated() {
     console.log("Authentication successful");
     window.dispatchEvent(new CustomEvent("authenticated"));
+
+    await this.measureBattery();
     await this.measureHr();
+    await this.measureActivity();
   }
 
   async measureHr() {
-    console.log("Starting heart rate measurement")
-    await this.chars.hrControl.writeValue(Uint8Array.from([0x15, 0x02, 0x00]));
-    await this.chars.hrControl.writeValue(Uint8Array.from([0x15, 0x01, 0x00]));
+    await this.chars.hrControl.writeValue(Uint8Array.from([21, 2, 1]));
     await this.startNotifications(this.chars.hrMeasure, (e) => {
-      console.log("Received heart rate value: ", e.target.value);
+      console.log("Current heart rate: ", e.target.value);
       const heartRate = e.target.value.getInt16();
       window.dispatchEvent(
         new CustomEvent("heartrate", {
@@ -110,15 +125,44 @@ export class MiBand5 {
         })
       );
     });
-    await this.chars.hrControl.writeValue(Uint8Array.from([0x15, 0x01, 0x01]));
 
-    // Start pinging HRM
-    this.hrmTimer =
-      this.hrmTimer ||
-      setInterval(() => {
-        console.log("Pinging heart rate monitor");
-        this.chars.hrControl.writeValue(Uint8Array.from([0x16]));
-      }, 12000);
+    setInterval(() => {
+      this.chars.hrControl.writeValue(Uint8Array.from([22]));
+    }, 1000);
+  }
+
+  async getBattery() {
+    return this.chars.battery.readValue()
+        .then(data => {
+          let power = new Int8Array((data).buffer)[1]
+          console.log("Current power: ", power)
+          return power
+        })
+  }
+
+  async measureBattery() {
+    setInterval( () => this.getBattery(), 1000);
+  }
+
+  async getActivity() {
+    this.chars.steps.readValue()
+        .then(data => {
+          let buffer = data.buffer;
+          let steps = buf2dec(bufReverse(buffer.slice(1, 5)))
+          let distance = buf2dec(bufReverse(buffer.slice(5, 9)))
+          let calories = buf2dec(bufReverse(buffer.slice(9, 13)))
+          console.log("Current steps: ", steps)
+          console.log("Current distance: ", distance)
+          console.log("Current calories: ", calories)
+        })
+  }
+
+  async measureActivity() {
+    setInterval(() => this.getActivity(), 1000);
+  }
+
+  async vibrate() {
+    await this.chars.vibration.writeValue(Uint8Array.from([3]));
   }
 
   async startNotifications(char, cb) {
