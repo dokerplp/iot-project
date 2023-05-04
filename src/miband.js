@@ -1,4 +1,4 @@
-import {ADVERTISEMENT_SERVICE, CHAR_UUIDS, UUIDS} from "./constants.js";
+import {ADVERTISEMENT_SERVICE, CHAR_UUIDS, NOTIFICATION_DESCRIPTOR, UUIDS} from "./constants.js";
 
 function buf2hex(buffer) {
   return Array.prototype.map
@@ -48,6 +48,7 @@ export class MiBand5 {
     this.authKey = authKey;
     this.services = {};
     this.chars = {};
+    this.descs = {};
   }
 
   async init() {
@@ -82,6 +83,9 @@ export class MiBand5 {
     this.chars.vibration = await this.services.vibration.getCharacteristic(CHAR_UUIDS.alert);
     this.chars.steps = await this.services.miband1.getCharacteristic(CHAR_UUIDS.steps);
     this.chars.notification = await this.services.notification.getCharacteristic(CHAR_UUIDS.notifications);
+    this.chars.music = await this.services.miband1.getCharacteristic(CHAR_UUIDS.music_notification)
+
+    this.descs.music = await this.chars.music.getDescriptor(NOTIFICATION_DESCRIPTOR)
 
     console.log("Characteristics initialized");
 
@@ -177,6 +181,11 @@ export class MiBand5 {
   async startNotifications(char, cb) {
     await char.startNotifications();
     char.addEventListener("characteristicvaluechanged", cb);
+  }
+
+  async music() {
+    await this.chars.music.startNotifications();
+    await this.descs.music.writeValue(Uint8Array.from([1, 0]));
   }
 }
 

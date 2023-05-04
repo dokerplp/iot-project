@@ -59,7 +59,12 @@
     </div>
   </div>
   <div id="actions" class="d-none">
-    <img class="img" src="img/flash-btn.png" onclick="window.miband.vibrate()"/>
+    <img class="img" src="img/flash.png" onclick="window.miband.vibrate()"/>
+    <img class="img" src="img/email.png" onclick="notification([1, 1])">
+    <img class="img" src="img/phone-call.png" onclick="notification([3, 1])">
+    <img class="img" src="img/missed-call.png" onclick="notification([4, 1])">
+    <img class="img" src="img/sms.png" onclick="notification([5, 1])">
+    <input type="text" id="notification_name"/>
   </div>
 </div>
 
@@ -83,13 +88,17 @@
   let authKey = localStorage.getItem("auth-key");
   if (authKey) keyInput.value = authKey;
 
+  function swap() {
+    initBox.classList.add("d-none");
+    dataBox.classList.remove("d-none");
+    actionsBox.classList.remove("d-none");
+  }
+
   connectButton.addEventListener("click", async () => {
     authKey = keyInput.value;
 
     window.addEventListener("connected", (e) => {
-      initBox.classList.add("d-none");
-      dataBox.classList.remove("d-none");
-      actionsBox.classList.remove("d-none");
+      swap();
       localStorage.setItem("auth-key", authKey);
     });
 
@@ -106,6 +115,10 @@
       alert(e.message);
     }
   });
+
+  function notification(type) {
+    window.miband.notification(type, document.querySelector("#notification_name").value)
+  }
 </script>
 </body>
 </html>

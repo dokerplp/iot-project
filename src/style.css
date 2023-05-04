@@ -120,3 +120,7 @@ button:hover {
   transform: translate(0, -50%);
   padding: 20px;
 }
+
+#notification_name {
+  width: 310px;
+}
