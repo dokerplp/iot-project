@@ -59,11 +59,27 @@
     </div>
   </div>
   <div id="actions" class="d-none">
-    <img class="img" src="img/flash.png" onclick="window.miband.vibrate()"/>
-    <img class="img" src="img/email.png" onclick="notification([1, 1])">
-    <img class="img" src="img/phone-call.png" onclick="notification([3, 1])">
-    <img class="img" src="img/missed-call.png" onclick="notification([4, 1])">
-    <img class="img" src="img/sms.png" onclick="notification([5, 1])">
+    <table>
+      <tr>
+        <td>
+          <img class="img" src="img/flash.png" onclick="window.miband.vibrate()"/>
+        </td>
+        <td>
+          <img class="img" src="img/email.png" onclick="notification([1, 1])">
+        </td>
+        <td>
+          <img class="img" src="img/phone-call.png" onclick="notification([3, 1])">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img class="img" src="img/missed-call.png" onclick="notification([4, 1])">
+        </td>
+        <td>
+          <img class="img" src="img/sms.png" onclick="notification([5, 1])">
+        </td>
+      </tr>
+    </table>
     <input type="text" id="notification_name"/>
   </div>
 </div>
